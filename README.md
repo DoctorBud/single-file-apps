@@ -16,7 +16,7 @@ A few examples of how a single HTML file can be an easy and powerful way to teac
 
 ### Let's Play
 
-A good first step is to [Explore the Gallery](./index.html) and see if any of the example apps look interesting or useful.
+A good first step is to [Explore the Gallery](https://doctorbud.com/single-file-apps/) and see if any of the example apps look interesting or useful.
 
 #### Copy the Example
 
@@ -28,4 +28,15 @@ These apps are intended to be copied and used as starting points for your own id
 ### Show and Tell Time
 
 The single-file format is intended to support rapid iteration and evolution and learning; however, you will eventually want to *publish* your example and show it off to your friends and the world.
+
+#### Using GitHub Pages
+
+
+#### Using Netlify
+
+
+#### Using Glitch
+
+
+#### And Many More
 
