@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <style>
+    #canvas-box {
+      width: 100%;
+      height: 70vh;
+      margin: 0;
+    }
+
+    #controls-box {
+      padding: 5px;
+      background: lightgray;
+    }
+
+    #self-destruct {}
+
+    #notes-box {
+      padding: 2px 20px;
+      border: 5px solid darkgray;
+      height: 18vh;
+      overflow-y: auto;
+    }
+    </style>
+  </head>
+
+  <body>
+    <div id="canvas-box">
+      <canvas id="canvas"></canvas>
+    </div>
+    <div id="controls-box">
+      <button id="self-destruct"
+        onclick="selfDestruct();"> Self-Destruct </button>
+    </div>
+    <div id="notes-box">
+      <p> I threw together a simple single-file HTML app that animates a crude 'spaceship' across a canvas and also has a 'Self-Destruct' button that generates a simple noise and changes the animation so that ship's nose/body/tail separate. </p>
+      <p> It's pretty minimal, but is extensible and might be a good starting point for improvements like: <ul>
+          <li>Add Play/Pause/Reset to the simulation</li>
+          <li>Add keyboard controls for thrust and rotation</li>
+          <li>Improve Self-Destruct behavior</li>
+          <li>Handle window-resizing</li>
+          <li>Simulate a wrap-around world, rather than the current bounce-off-the-walls world</li>
+          <li>Simulate a gravity field</li>
+        </ul>
+      </p>
+    </div>
+    <script>
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContext();
+
+    function playExplosionSound() {
+      const oscNode = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscNode.type = "square";
+      oscNode.frequency.value = 100;
+      oscNode.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      gainNode.gain.value = 0.1;
+      oscNode.start(audioContext.currentTime);
+      oscNode.stop(audioContext.currentTime + 0.1);
+    }
+    const canvasBox = document.getElementById('canvas-box');
+    const canvas = document.getElementById('canvas');
+    const drawing = canvas.getContext('2d');
+    canvas.width = canvasBox.clientWidth;
+    canvas.height = canvasBox.clientHeight;
+    const shipBodyWidth = 24;
+    const shipBodyHeight = shipBodyWidth * 4;
+    const shipNoseHeight = shipBodyHeight * 0.5;
+    const shipNoseWidth = shipBodyWidth * 1.5;
+    const shipTailHeight = shipBodyHeight / 2;
+    const shipTailWidth = shipBodyWidth * 2;
+    //
+    // This drawShip() function draws a 'spaceship' where:
+    //  - Ship's nose is at (x,y)
+    //  - Ship is rotated by (rotation), specified in degrees.
+    //  - If (fragmentation > 0), then the three parts
+    //    of the ship will be drawn apart from each other,
+    //    to indicate an exploded ship.
+    //
+    function drawShip(x, y, rotation, fragmentation) {
+      drawing.save();
+      drawing.translate(x, y);
+      drawing.rotate(rotation / (180.0 / Math.PI));
+      // Main body of ship
+      drawing.fillStyle = 'red';
+      drawing.fillRect(-shipBodyWidth / 2, shipNoseHeight, shipBodyWidth, shipBodyHeight);
+      // nosecone
+      drawing.beginPath();
+      drawing.moveTo(0, 0 - fragmentation);
+      drawing.lineTo(shipNoseWidth, shipNoseHeight - fragmentation);
+      drawing.lineTo(-shipNoseWidth, shipNoseHeight - fragmentation);
+      drawing.fillStyle = 'green';
+      drawing.fill();
+      // tailfin
+      drawing.beginPath();
+      drawing.moveTo(-shipBodyWidth / 2, shipNoseHeight + shipBodyHeight + fragmentation);
+      drawing.lineTo(-(shipTailWidth + shipBodyWidth) / 2, shipNoseHeight + shipBodyHeight + shipTailHeight + fragmentation);
+      drawing.lineTo((shipTailWidth + shipBodyWidth) / 2, shipNoseHeight + shipBodyHeight + shipTailHeight + fragmentation);
+      drawing.lineTo(shipBodyWidth / 2, shipNoseHeight + shipBodyHeight + fragmentation);
+      drawing.fillStyle = 'lightblue';
+      drawing.fill();
+      drawing.restore();
+    }
+    let shipX = shipBodyHeight;
+    let shipY = shipBodyHeight;
+    let shipRotation = 0;
+    let shipFragmentation = 0;
+    let deltaX = 0.5;
+    let deltaY = 0.5;
+    let shipDestroyed = false;
+    window.selfDestruct = function() {
+      shipDestroyed = true;
+      playExplosionSound();
+    }
+
+    function updateDisplay() {
+      drawing.fillStyle = 'darkslateblue';
+      drawing.fillRect(0, 0, canvas.width, canvas.height);
+      if (shipDestroyed) {
+        shipFragmentation += 0.1;
+      }
+      drawShip(shipX, shipY, shipRotation, shipFragmentation);
+      if (shipX > canvas.width) {
+        deltaX = -deltaX;
+      } else if (shipX < 0) {
+        deltaX = -deltaX;
+      }
+      if (shipY > canvas.height) {
+        deltaY = -deltaY;
+      } else if (shipY < 0) {
+        deltaY = -deltaY;
+      }
+      shipX += deltaX;
+      shipY += deltaY;
+      shipRotation += 0.5;
+      window.requestAnimationFrame(updateDisplay);
+    }
+    window.requestAnimationFrame(updateDisplay);
+    </script>
+  </body>
+
+</html>
